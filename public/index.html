@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <a href="/about.html">About</a>
+    <a href="/me.html">Me</a>
+    <script>
+    const channel = new BroadcastChannel("myGroupOfTabs")
+    const serviceWorkerHandler = () => {
+        if(navigator.onLine){
+        navigator.serviceWorker.getRegistrations().then(registration => {
+            if(registration.length > 0){
+                registration.map(reg => {
+                    reg.unregister()
+                })
+                    window.location.reload()
+                }else{
+                    navigator.serviceWorker.register("./sw.js")
+                    }
+                })
+        }else{
+            const a = document.createElement("a")
+            a.href = "/gameOver.html"
+            a.click()
+        }
+    }
+    serviceWorkerHandler()
+    </script>
+    <script>
+        var idb = window.indexedDB ||      // Use the standard DB API
+          window.mozIndexedDB ||   // Or Firefox's early version of it
+          window.webkitIndexedDB;  // Or Chrome's early version
+
+        var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction;
+        var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
+        let db , OpenRequest
+        OpenRequest = idb.open("MyDatabase")
+
+        OpenRequest.onsuccess = () => {
+            console.log("success")
+            db = OpenRequest.result
+            main()
+        }
+        OpenRequest.onupgradeneeded = () => {
+            console.log("upgrade")
+            const objectStore = OpenRequest.result.createObjectStore("dbObject" , {autoIncrement:true})
+            objectStore.createIndex("test1" , "test2" , {unique:false})
+        }
+        OpenRequest.onerror = () => {
+            console.log("error")
+        }
+        
+        function main()
+        {
+            console.log("main")
+            // db.transaction()
+            const transaction = db.transaction("dbObject" , "readwrite").objectStore("dbObject")
+            console.log(transaction)
+            transaction.add("test1s")
+            // console.log("data",transaction.get(14))
+            transaction.openCursor().onsuccess = (e) => {
+                const cursor = e.target.result
+                // transaction.delete()
+                console.log("cursor" , cursor)
+                cursor?.continue()
+            }
+        }
+    </script>
+</body>
+</html>

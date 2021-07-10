@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page couldn't be load</title>
+</head>
+<style>
+    *{
+        margin: 0;
+    }
+    body{
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        /* flex-direction: column; */
+    }
+    .block{
+        height: 70vh;
+        width: 75vw;
+        /* background: url("./person.png"); */
+        background-repeat: no-repeat;
+        background-size: 50%;
+        background-position: center;
+        object-fit: cover;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: white;
+        /* background: transparent; */
+        /* border: 2px dashed black; */
+    }
+    .terrain{
+        height: 5vh;
+        width: 90%;
+        background: rgb(47,46,65);
+        border-top:5px solid rgb(89,83,185);
+        border-bottom-right-radius: 10px;
+        border-bottom-left-radius: 10px;
+        position: absolute;
+        /* bottom: 5vh; */
+    }
+    .container{
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .obstacle{
+        position: absolute;
+        bottom:5vh;
+        right: 0;
+        height: 10vh;
+        width: 5vw;
+        background-color: rgb(47,46,65);
+        border: 5px solid rgb(89,83,185);
+        border-bottom: none;
+        animation: move 3s infinite ease-in-out;
+    }
+    #sprite{
+        position: absolute;
+        left:0;
+        bottom:5vh;
+        height: 10vh;
+        width: 5vw;
+        background-color: rgb(105,96,248);
+    }
+    .jump{
+        animation: jump 1s ;
+    }
+    h1{
+        color: red;
+        line-height: 10vw;
+        font-size: 10vw;
+        height: 10vw;
+        text-align: center;
+        width: 100vw;
+        overflow: hidden;
+        white-space: nowrap;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        /* animation: typing 2s steps(9) , blinkLine .5s infinite ; */
+    }
+    .typol{
+        animation: typing 2s steps(9) , blinkLine .5s infinite ;
+    }
+    @-webkit-keyframes move{
+        0%{
+            right: 0;
+            bottom: 5vh;
+        }
+        50%{
+            right: 100%;
+            bottom: 5vh;
+            /* border: 5px solid rgb(89,83,185); */
+        }
+        100%{
+            border: 5px solid rgb(89,83,185);
+            right: 100%;
+            bottom: -100vh;
+        }
+    }
+    @-webkit-keyframes blinkLine{
+        0%{
+            border-right: none;
+        }
+        50%{
+            border-right: 2px solid red;
+        }
+    }
+    @keyframes typing{
+        from{
+            width: 0;
+        }
+    }
+    @-webkit-keyframes jump{
+        0%{
+            bottom:5vh;
+        }
+        40%{
+            bottom:40vh;
+        }
+    }
+    div > h6::after{
+        content: " POINTS";
+    }
+    div > h6{
+        color: white;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        font-size: 1.5vw;
+    }
+</style>
+<body>
+    <div class="block">
+        <div class="terrain">
+            <div class="container">
+                <h6>0</h6>
+                <div class="obstacle" id="obstacle"></div>
+                <div  id="sprite"></div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    const serviceWorkerHandler = () => {
+        if(navigator.onLine){
+        navigator.serviceWorker.getRegistrations().then(registration => {
+            if(registration.length > 0){
+                registration.map(reg => {
+                    reg.unregister()
+                })
+                    window.location.reload()
+                }else{
+                    navigator.serviceWorker.register("./sw.js")
+                    }
+                })
+        }else{
+            const a = document.createElement("a")
+            a.href = "/gameOver.html"
+            a.click()
+        }
+    }
+    serviceWorkerHandler()
+    const obstacle = document.getElementById("obstacle")
+    const sprite = document.getElementById("sprite")
+    const text = document.querySelector("h6")
+    const block = document.querySelector(".block")
+    // console.log(block)
+    const terrain = document.querySelector("div.terrain")
+    // console.log(obstacle , "here")
+    let points = 0
+    document.addEventListener("keydown" , (e) => {
+        if(e.key == " "){
+            sprite.classList.add("jump")
+        }
+    })
+    sprite.addEventListener("animationend" , () => {
+        sprite.classList.remove("jump")
+    })
+    obstacle.addEventListener("animationiteration" , () => {
+        points += 1
+        // console.log(distanceVertical , obstacle.getBoundingClientRect())
+        text.innerHTML = points
+    })
+
+    const gameOver = () => {
+        block.parentElement.removeChild(block)
+        const h1 = document.createElement("h1")
+        h1.innerHTML = "GAME OVER"
+        h1.classList.add("typol")
+        h1.addEventListener("animationend", () => {
+            h1.classList.remove("typol")
+        })
+        h1.onclick = () => {
+            window.location.reload()
+        }
+        document.body.appendChild(h1)
+    }
+
+    const distanceBottom =  obstacle.getBoundingClientRect().bottom - 10*window.innerHeight/100// + obstacle.getBoundingClientRect().height
+    const distanceVerticalMin = 5*window.innerWidth/100 + terrain.getBoundingClientRect().left
+    const distanceVerticalMax = terrain.getBoundingClientRect().left
+    function loop()
+    {
+        const measure = obstacle.getBoundingClientRect()
+        const spriteDist = sprite.getBoundingClientRect()
+        if(measure.left < distanceVerticalMin && measure.left > distanceVerticalMax){
+            if(spriteDist.bottom >= distanceBottom){//you are not at high
+                gameOver()
+            }
+        }
+        requestAnimationFrame(loop)
+    }
+    loop()
+</script>
+</html>
