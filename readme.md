@@ -1,4 +1,4 @@
-#Offline Dinossaur Game
+# Offline Dinossaur Game
 
 this is a application is a new fresh style for the offline game of chrome
 but much easier, the good part of it , is that this app use service worker
